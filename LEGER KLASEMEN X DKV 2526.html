@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATA LEGER KLASEMEN – X DKV 4</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+:root {
+  --indigo:#3B4FE4; --emerald:#10B981; --rose:#F43F5E; --amber:#F59E0B;
+  --slate-900:#0F172A; --slate-700:#334155; --slate-500:#64748B; --slate-300:#CBD5E1; --slate-100:#F1F5F9;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Plus Jakarta Sans',sans-serif; background:#F8FAFF; color:var(--slate-900); }
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg,#1e3a8a,#3B4FE4,#7C3AED);
+  color:white; padding:28px 24px 24px; text-align:center;
+}
+.header h1 { font-size:22px; font-weight:800; }
+.header p { font-size:13px; opacity:.75; margin-top:4px; }
+
+/* TOOLBAR */
+.toolbar {
+  background:white; padding:16px 20px;
+  border-bottom:1px solid var(--slate-300);
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  position:sticky; top:0; z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.search-box {
+  position:relative; flex:1; min-width:200px;
+}
+.search-box input {
+  width:100%; padding:8px 12px 8px 36px;
+  border:1.5px solid var(--slate-300); border-radius:8px;
+  font-size:13px; font-family:inherit; outline:none;
+}
+.search-box input:focus { border-color:var(--indigo); }
+.search-box::before { content:'🔍'; position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:13px; }
+
+select {
+  padding:8px 12px; border:1.5px solid var(--slate-300); border-radius:8px;
+  font-size:13px; font-family:inherit; outline:none; background:white; cursor:pointer;
+}
+select:focus { border-color:var(--indigo); }
+
+.btn-reset {
+  padding:8px 16px; background:var(--slate-100); border:1.5px solid var(--slate-300);
+  border-radius:8px; font-size:13px; font-family:inherit; font-weight:600;
+  cursor:pointer; color:var(--slate-700);
+}
+.btn-reset:hover { background:var(--slate-300); }
+
+.result-count {
+  font-size:12px; color:var(--slate-500); font-weight:600; white-space:nowrap;
+}
+
+/* TABLE WRAPPER */
+.table-wrap { overflow-x:auto; padding:16px 20px; }
+table { width:100%; border-collapse:collapse; font-size:13px; min-width:900px; }
+
+/* HEADER ROW */
+thead tr { background:var(--slate-900); color:white; }
+th {
+  padding:11px 12px; text-align:left; font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.5px; white-space:nowrap;
+  user-select:none; cursor:pointer; position:relative;
+}
+th:hover { background:#1e293b; }
+th .sort-icon { margin-left:4px; opacity:.4; font-size:10px; }
+th.sort-asc .sort-icon::after { content:'▲'; opacity:1; }
+th.sort-desc .sort-icon::after { content:'▼'; opacity:1; }
+th:not(.sort-asc):not(.sort-desc) .sort-icon::after { content:'⇅'; }
+
+/* BODY ROWS */
+tbody tr { border-bottom:1px solid #F1F5F9; transition:background .1s; }
+tbody tr:hover { background:#EEF2FF; }
+tbody tr:nth-child(even) { background:#FAFBFF; }
+tbody tr:nth-child(even):hover { background:#EEF2FF; }
+td { padding:9px 12px; vertical-align:middle; }
+
+.nama-cell { font-weight:700; font-size:12.5px; }
+.num-cell { font-family:'Space Grotesk',sans-serif; font-weight:600; text-align:right; }
+
+/* RANK BADGE */
+.rank-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:7px;
+  font-weight:800; font-size:12px; font-family:'Space Grotesk',sans-serif;
+}
+.r1 { background:#FEF3C7; color:#D97706; }
+.r2 { background:#E0E7FF; color:#4338CA; }
+.r3 { background:#DCFCE7; color:#15803D; }
+.rn { background:#F1F5F9; color:#64748B; }
+
+/* TREN BADGE */
+.badge { padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700; white-space:nowrap; }
+.naik  { background:#DCFCE7; color:#15803D; }
+.turun { background:#FEE2E2; color:#DC2626; }
+.tetap { background:#F1F5F9; color:#64748B; }
+
+/* DELTA */
+.delta-pos { color:#10B981; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+.delta-neg { color:#F43F5E; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+
+/* NILAI BAR */
+.nilai-bar-wrap { display:flex; align-items:center; gap:8px; }
+.nilai-bar-bg { flex:1; height:6px; background:#E2E8F0; border-radius:99px; min-width:60px; }
+.nilai-bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#3B4FE4,#7C3AED); }
+
+/* ABSEN CHIP */
+.absen-chip { display:inline-flex; gap:4px; }
+.chip { padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700; }
+.chip-s { background:#FEF3C7; color:#92400E; }
+.chip-i { background:#DBEAFE; color:#1E40AF; }
+.chip-a { background:#FEE2E2; color:#991B1B; }
+
+/* EMPTY STATE */
+.empty { text-align:center; padding:48px; color:var(--slate-500); font-size:14px; }
+
+/* FOOTER */
+.footer-bar {
+  background:white; padding:12px 20px; border-top:1px solid var(--slate-300);
+  display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+  font-size:12px; color:var(--slate-500);
+}
+.stat-pill {
+  background:var(--slate-100); padding:4px 10px; border-radius:6px;
+  font-weight:700; color:var(--slate-700);
+}
+
+/* LEGEND */
+.legend-row { display:flex; flex-wrap:wrap; gap:8px; padding:10px 20px; background:white; border-bottom:1px solid var(--slate-300); }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--slate-500); }
+.ldot { width:10px; height:10px; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>DATA LEGER KLASEMEN  – KELAS X DKV 4</h1>
+  <p>SMKN 9 GARUT · NPSN 20253861 · Tahun Pelajaran 2025/2026 · 35 Peserta Didik</p>
+</div>
+
+<!-- LEGEND -->
+<div class="legend-row">
+  <div class="legend-item"><div class="ldot" style="background:#FEF3C7;border:1px solid #D97706"></div> Rank 1</div>
+  <div class="legend-item"><div class="ldot" style="background:#E0E7FF;border:1px solid #4338CA"></div> Rank 2</div>
+  <div class="legend-item"><div class="ldot" style="background:#DCFCE7;border:1px solid #15803D"></div> Rank 3</div>
+  <div class="legend-item"><div class="ldot" style="background:#DCFCE7"></div> Tren Naik</div>
+  <div class="legend-item"><div class="ldot" style="background:#FEE2E2"></div> Tren Turun</div>
+  <div class="legend-item"><div class="ldot" style="background:#F1F5F9"></div> Tren Tetap</div>
+  <div class="legend-item"><span class="chip chip-s">S</span> Sakit &nbsp;<span class="chip chip-i">I</span> Izin &nbsp;<span class="chip chip-a">A</span> Alpa</div>
+  <div class="legend-item">Delta = Selisih nilai S2 − S1</div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Cari nama siswa..." oninput="applyFilter()">
+  </div>
+
+  <select id="filterTren" onchange="applyFilter()">
+    <option value="">Semua Tren</option>
+    <option value="Naik">⬆ Naik Ranking</option>
+    <option value="Turun">⬇ Turun Ranking</option>
+    <option value="Tetap">➡ Tetap</option>
+  </select>
+
+  <select id="filterRankS2" onchange="applyFilter()">
+    <option value="">Semua Ranking S2</option>
+    <option value="top5">Top 5</option>
+    <option value="top10">Top 10</option>
+    <option value="bot10">10 Terbawah</option>
+  </select>
+
+  <select id="filterAbsen" onchange="applyFilter()">
+    <option value="">Semua Kehadiran</option>
+    <option value="0">Tanpa Absen (Total=0)</option>
+    <option value="low">Absen Rendah (≤5)</option>
+    <option value="high">Absen Tinggi (>10)</option>
+  </select>
+
+  <select id="filterDelta" onchange="applyFilter()">
+    <option value="">Semua Delta</option>
+    <option value="high">Delta Tinggi (≥2.5)</option>
+    <option value="mid">Delta Sedang (1–2.5)</option>
+    <option value="low">Delta Rendah (<1)</option>
+  </select>
+
+  <button class="btn-reset" onclick="resetFilter()">✕ Reset</button>
+  <span class="result-count" id="resultCount"></span>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th onclick="sortTable('r2')">#<span class="sort-icon"></span></th>
+        <th onclick="sortTable('nama')">Nama Siswa<span class="sort-icon"></span></th>
+        <th onclick="sortTable('s1')">Nilai S1<span class="sort-icon"></span></th>
+        <th onclick="sortTable('s2')">Nilai S2<span class="sort-icon"></span></th>
+        <th>Grafik Nilai</th>
+        <th onclick="sortTable('delta')">Delta<span class="sort-icon"></span></th>
+        <th onclick="sortTable('r1')">Rank S1<span class="sort-icon"></span></th>
+        <th onclick="sortTable('r2')">Rank S2<span class="sort-icon"></span></th>
+        <th onclick="sortTable('tren')">Tren<span class="sort-icon"></span></th>
+        <th onclick="sortTable('absenS1')">Absen S1<span class="sort-icon"></span></th>
+        <th onclick="sortTable('absenS2')">Absen S2<span class="sort-icon"></span></th>
+        <th onclick="sortTable('totalAbsen')">Total Absen<span class="sort-icon"></span></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty" id="emptyState" style="display:none">Tidak ada data yang cocok 🔍</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer-bar" id="footerBar"></div>
+
+<script>
+const raw = [
+  {nama:'ADE SAHRUL GUNAWAN',     s1:81.69,s2:83.54,r1:14,r2:14,s1s:1,s1i:0,s1a:0,s2s:1,s2i:0,s2a:0},
+  {nama:'AI IMAS',                s1:84.23,s2:85.38,r1:4, r2:7, s1s:0,s1i:0,s1a:0,s2s:0,s2i:0,s2a:0},
+  {nama:'AI NURAWALIAH AL ZAHRA', s1:83.77,s2:85.69,r1:4, r2:3, s1s:2,s1i:2,s1a:0,s2s:2,s2i:2,s2a:0},
+  {nama:'AI SITI MUSLIMAH',       s1:82.85,s2:84.69,r1:8, r2:7, s1s:2,s1i:1,s1a:0,s2s:2,s2i:1,s2a:0},
+  {nama:'AI TITO',                s1:82.92,s2:85.15,r1:8, r2:7, s1s:0,s1i:0,s1a:0,s2s:0,s2i:0,s2a:0},
+  {nama:'AJENG DWI RAISSA FITRI', s1:82.38,s2:84.69,r1:14,r2:7, s1s:1,s1i:1,s1a:1,s2s:1,s2i:1,s2a:1},
+  {nama:'AMELIA GENDIS EKA PRATIWI',s1:81.46,s2:84.46,r1:24,r2:14,s1s:1,s1i:0,s1a:0,s2s:1,s2i:0,s2a:0},
+  {nama:'AMIRA NUR AULIA',        s1:85.15,s2:86.92,r1:2, r2:1, s1s:0,s1i:0,s1a:1,s2s:0,s2i:0,s2a:1},
+  {nama:'AQILA NAZIL FALAQ',      s1:80.00,s2:82.23,r1:32,r2:28,s1s:5,s1i:1,s1a:0,s2s:5,s2i:1,s2a:0},
+  {nama:'AZZAHRA QYASIMAH',       s1:81.38,s2:84.92,r1:24,r2:7, s1s:4,s1i:1,s1a:0,s2s:4,s2i:1,s2a:0},
+  {nama:'CECEP REZA SOEHANDI',    s1:80.08,s2:82.46,r1:32,r2:28,s1s:3,s1i:3,s1a:0,s2s:3,s2i:3,s2a:0},
+  {nama:'DAVA BAGJA NUGRAHA',     s1:80.85,s2:82.31,r1:24,r2:28,s1s:4,s1i:0,s1a:1,s2s:4,s2i:0,s2a:1},
+  {nama:'DEDE APRILIA KARTIKA',   s1:84.23,s2:85.92,r1:4, r2:3, s1s:0,s1i:1,s1a:0,s2s:0,s2i:1,s2a:0},
+  {nama:'DEVINA NAYYRA FITRIANI', s1:84.54,s2:85.92,r1:2, r2:3, s1s:2,s1i:1,s1a:0,s2s:2,s2i:1,s2a:0},
+  {nama:'DIRA RAHMAWATI',         s1:81.54,s2:83.62,r1:14,r2:14,s1s:4,s1i:1,s1a:0,s2s:4,s2i:1,s2a:0},
+  {nama:'FITRIYANI',              s1:82.15,s2:84.08,r1:14,r2:14,s1s:2,s1i:0,s1a:0,s2s:2,s2i:0,s2a:0},
+  {nama:'GILAR APGAN M. SOLEH',   s1:82.69,s2:83.15,r1:8, r2:21,s1s:1,s1i:0,s1a:1,s2s:1,s2i:0,s2a:1},
+  {nama:'INDAH TRIJAYANTI',       s1:86.08,s2:86.85,r1:1, r2:1, s1s:1,s1i:0,s1a:1,s2s:1,s2i:0,s2a:1},
+  {nama:'KHAIRAN GLADWIN A.',     s1:80.00,s2:81.69,r1:32,r2:28,s1s:5,s1i:2,s1a:0,s2s:5,s2i:2,s2a:0},
+  {nama:'NADIRA MEGA RIZKIA',     s1:81.54,s2:83.23,r1:14,r2:21,s1s:6,s1i:0,s1a:1,s2s:6,s2i:0,s2a:1},
+  {nama:'NADYA NURLATIFA',        s1:82.08,s2:83.08,r1:14,r2:21,s1s:7,s1i:0,s1a:0,s2s:7,s2i:0,s2a:0},
+  {nama:'NAILA AGUSTIN',          s1:80.92,s2:82.54,r1:24,r2:21,s1s:4,s1i:1,s1a:1,s2s:4,s2i:1,s2a:1},
+  {nama:'NANI YULIYANI',          s1:81.69,s2:83.46,r1:14,r2:21,s1s:1,s1i:3,s1a:0,s2s:1,s2i:3,s2a:0},
+  {nama:'NAPSA JAKIYAH',          s1:83.46,s2:85.08,r1:8, r2:7, s1s:0,s1i:0,s1a:0,s2s:0,s2i:0,s2a:0},
+  {nama:'NAZWA KURNIA',           s1:81.15,s2:84.00,r1:24,r2:14,s1s:2,s1i:1,s1a:1,s2s:2,s2i:1,s2a:1},
+  {nama:'NAZWA NUR AISYAH',       s1:82.31,s2:84.38,r1:14,r2:14,s1s:4,s1i:2,s1a:2,s2s:4,s2i:2,s2a:2},
+  {nama:'NENG SRI RAHAYU',        s1:81.62,s2:82.69,r1:14,r2:21,s1s:6,s1i:1,s1a:0,s2s:6,s2i:1,s2a:0},
+  {nama:'RAFI FAUZAN NAJA L.',    s1:81.38,s2:82.15,r1:24,r2:28,s1s:4,s1i:1,s1a:0,s2s:4,s2i:1,s2a:0},
+  {nama:'RAIRA PUTRI',            s1:84.46,s2:85.54,r1:4, r2:3, s1s:4,s1i:0,s1a:0,s2s:4,s2i:0,s2a:0},
+  {nama:'RISMAYANTI',             s1:83.23,s2:84.85,r1:8, r2:7, s1s:2,s1i:0,s1a:0,s2s:2,s2i:0,s2a:0},
+  {nama:'RITA PEBRIYANI',         s1:81.85,s2:84.23,r1:14,r2:14,s1s:3,s1i:1,s1a:1,s2s:3,s2i:1,s2a:1},
+  {nama:'RIZKY KURNIAWAN',        s1:80.85,s2:82.38,r1:24,r2:28,s1s:4,s1i:1,s1a:1,s2s:4,s2i:1,s2a:1},
+  {nama:'SILVY SILVI YANA',       s1:80.00,s2:81.23,r1:32,r2:35,s1s:4,s1i:2,s1a:1,s2s:4,s2i:2,s2a:1},
+  {nama:'SULISTIAWATI',           s1:83.08,s2:83.31,r1:8, r2:21,s1s:4,s1i:1,s1a:0,s2s:4,s2i:1,s2a:0},
+  {nama:'YARA YUNIARSYAH',        s1:81.23,s2:82.31,r1:24,r2:28,s1s:6,s1i:3,s1a:0,s2s:6,s2i:3,s2a:0},
+];
+
+// Enrich data
+const data = raw.map(d => ({
+  ...d,
+  delta: parseFloat((d.s2 - d.s1).toFixed(2)),
+  tren: d.r2 < d.r1 ? 'Naik' : d.r2 > d.r1 ? 'Turun' : 'Tetap',
+  absenS1: d.s1s + d.s1i + d.s1a,
+  absenS2: d.s2s + d.s2i + d.s2a,
+  totalAbsen: d.s1s+d.s1i+d.s1a + d.s2s+d.s2i+d.s2a,
+}));
+
+let filtered = [...data];
+let sortKey = 'r2';
+let sortDir = 1; // 1=asc, -1=desc
+
+function rankBadgeClass(r) {
+  if(r===1) return 'r1'; if(r===2) return 'r2'; if(r===3) return 'r3'; return 'rn';
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('resultCount').textContent = `${filtered.length} dari ${data.length} siswa`;
+
+  if(filtered.length === 0) {
+    tbody.innerHTML=''; empty.style.display='block'; return;
+  }
+  empty.style.display='none';
+
+  const minS1=Math.min(...data.map(d=>d.s1)), maxS1=Math.max(...data.map(d=>d.s1));
+  const minS2=Math.min(...data.map(d=>d.s2)), maxS2=Math.max(...data.map(d=>d.s2));
+
+  tbody.innerHTML = filtered.map((d,i) => {
+    const rb1 = rankBadgeClass(d.r1);
+    const rb2 = rankBadgeClass(d.r2);
+    const trenClass = d.tren==='Naik'?'naik':d.tren==='Turun'?'turun':'tetap';
+    const trenIcon = d.tren==='Naik'?'⬆':d.tren==='Turun'?'⬇':'➡';
+    const deltaStr = d.delta>=0
+      ? `<span class="delta-pos">+${d.delta.toFixed(2)}</span>`
+      : `<span class="delta-neg">${d.delta.toFixed(2)}</span>`;
+    const barPct = Math.round(((d.s2-minS2)/(maxS2-minS2))*100);
+    const rowBg = d.tren==='Naik'?'':'';
+    return `<tr>
+      <td class="num-cell" style="color:#94A3B8;font-size:11px">${i+1}</td>
+      <td class="nama-cell">${d.nama}</td>
+      <td class="num-cell">${d.s1.toFixed(2)}</td>
+      <td class="num-cell" style="color:#3B4FE4;font-weight:800">${d.s2.toFixed(2)}</td>
+      <td><div class="nilai-bar-wrap"><div class="nilai-bar-bg"><div class="nilai-bar-fill" style="width:${barPct}%"></div></div><span style="font-size:10px;color:#94A3B8;font-family:'Space Grotesk',sans-serif">${d.s2.toFixed(1)}</span></div></td>
+      <td>${deltaStr}</td>
+      <td><span class="rank-badge ${rb1}">${d.r1}</span></td>
+      <td><span class="rank-badge ${rb2}">${d.r2}</span></td>
+      <td><span class="badge ${trenClass}">${d.tren==='Naik'?'⬆ Naik':d.tren==='Turun'?'⬇ Turun':'➡ Tetap'}</span></td>
+      <td><span class="absen-chip"><span class="chip chip-s">S${d.s1s}</span><span class="chip chip-i">I${d.s1i}</span><span class="chip chip-a">A${d.s1a}</span></span></td>
+      <td><span class="absen-chip"><span class="chip chip-s">S${d.s2s}</span><span class="chip chip-i">I${d.s2i}</span><span class="chip chip-a">A${d.s2a}</span></span></td>
+      <td class="num-cell" style="font-weight:800;color:${d.totalAbsen>10?'#DC2626':d.totalAbsen>5?'#D97706':'#15803D'}">${d.totalAbsen}</td>
+    </tr>`;
+  }).join('');
+
+  // Update footer stats
+  const avgS2 = (filtered.reduce((a,d)=>a+d.s2,0)/filtered.length).toFixed(2);
+  const avgDelta = (filtered.reduce((a,d)=>a+d.delta,0)/filtered.length).toFixed(2);
+  const naikCount = filtered.filter(d=>d.tren==='Naik').length;
+  const turunCount = filtered.filter(d=>d.tren==='Turun').length;
+  const tetapCount = filtered.filter(d=>d.tren==='Tetap').length;
+  const totalAbsen = filtered.reduce((a,d)=>a+d.totalAbsen,0);
+  document.getElementById('footerBar').innerHTML = `
+    <span>Hasil filter:</span>
+    <span class="stat-pill">Rata-rata S2: ${avgS2}</span>
+    <span class="stat-pill">Avg Delta: +${avgDelta}</span>
+    <span class="stat-pill" style="color:#15803D">⬆ Naik: ${naikCount}</span>
+    <span class="stat-pill" style="color:#DC2626">⬇ Turun: ${turunCount}</span>
+    <span class="stat-pill" style="color:#64748B">➡ Tetap: ${tetapCount}</span>
+    <span class="stat-pill">Total Absen: ${totalAbsen}</span>
+  `;
+}
+
+function applyFilter() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const tren = document.getElementById('filterTren').value;
+  const rankF = document.getElementById('filterRankS2').value;
+  const absenF = document.getElementById('filterAbsen').value;
+  const deltaF = document.getElementById('filterDelta').value;
+
+  filtered = data.filter(d => {
+    if(q && !d.nama.toLowerCase().includes(q)) return false;
+    if(tren && d.tren !== tren) return false;
+    if(rankF === 'top5' && d.r2 > 5) return false;
+    if(rankF === 'top10' && d.r2 > 10) return false;
+    if(rankF === 'bot10') {
+      const sorted = [...data].sort((a,b)=>b.r2-a.r2);
+      const bot10names = sorted.slice(0,10).map(x=>x.nama);
+      if(!bot10names.includes(d.nama)) return false;
+    }
+    if(absenF === '0' && d.totalAbsen !== 0) return false;
+    if(absenF === 'low' && d.totalAbsen > 5) return false;
+    if(absenF === 'high' && d.totalAbsen <= 10) return false;
+    if(deltaF === 'high' && d.delta < 2.5) return false;
+    if(deltaF === 'mid' && (d.delta < 1 || d.delta >= 2.5)) return false;
+    if(deltaF === 'low' && d.delta >= 1) return false;
+    return true;
+  });
+
+  sortFiltered();
+  renderTable();
+}
+
+function sortFiltered() {
+  filtered.sort((a,b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if(typeof va === 'string') va=va.toLowerCase(), vb=vb.toLowerCase();
+    return va < vb ? -sortDir : va > vb ? sortDir : 0;
+  });
+}
+
+function sortTable(key) {
+  // update sort direction
+  if(sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+
+  // update header icons
+  document.querySelectorAll('th').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+  });
+  event.currentTarget.classList.add(sortDir===1 ? 'sort-asc':'sort-desc');
+
+  sortFiltered();
+  renderTable();
+}
+
+function resetFilter() {
+  document.getElementById('searchInput').value='';
+  document.getElementById('filterTren').value='';
+  document.getElementById('filterRankS2').value='';
+  document.getElementById('filterAbsen').value='';
+  document.getElementById('filterDelta').value='';
+  filtered = [...data];
+  sortKey='r2'; sortDir=1;
+  document.querySelectorAll('th').forEach(th=>th.classList.remove('sort-asc','sort-desc'));
+  sortFiltered();
+  renderTable();
+}
+
+// init: sort by rank S2 asc
+filtered.sort((a,b)=>a.r2-b.r2);
+renderTable();
+</script>
+</body>
+</html>
